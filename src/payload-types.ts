@@ -72,6 +72,8 @@ export interface Config {
     media: Media;
     categories: Category;
     users: User;
+    'user-progress': UserProgress;
+    courses: Course;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -88,6 +90,8 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    'user-progress': UserProgressSelect<false> | UserProgressSelect<true>;
+    courses: CoursesSelect<false> | CoursesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -191,7 +195,7 @@ export interface Page {
       | null;
     media?: (string | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | CourseBlock | FormBlock)[];
   meta?: {
     title?: string | null;
     /**
@@ -374,6 +378,9 @@ export interface Category {
 export interface User {
   id: string;
   name?: string | null;
+  role?: ('free' | 'subscriber' | 'admin') | null;
+  subscriptionStatus?: ('none' | 'active' | 'expired') | null;
+  photo?: (string | null) | Media;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -526,6 +533,103 @@ export interface ArchiveBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'archive';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CourseBlock".
+ */
+export interface CourseBlock {
+  introContent?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  populateBy?: ('collection' | 'selection') | null;
+  limit?: number | null;
+  selectedCourses?: (string | Course)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'course';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses".
+ */
+export interface Course {
+  id: string;
+  title?: string | null;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  courseImage?: (string | null) | Media;
+  courseVideo?: (string | null) | Media;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  instrument: string;
+  publishedDate?: string | null;
+  relatedCourses?: (string | null) | Course;
+  lessons: {
+    title: string;
+    accessLevel?: ('free' | 'premium') | null;
+    video: string | Media;
+    duration: string;
+    content: {
+      root: {
+        type: string;
+        children: {
+          type: string;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    };
+    resources?:
+      | {
+          label?: string | null;
+          file?: (string | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+    id?: string | null;
+  }[];
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (string | null) | Media;
+    description?: string | null;
+  };
+  slug?: string | null;
+  slugLock?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -729,6 +833,26 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "user-progress".
+ */
+export interface UserProgress {
+  id: string;
+  user?: (string | null) | User;
+  lesson?: (string | null) | Course;
+  progress?: number | null;
+  completedSections?:
+    | {
+        sectionTitle: string;
+        completedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  lastUpdated?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -920,6 +1044,14 @@ export interface PayloadLockedDocument {
         value: string | User;
       } | null)
     | ({
+        relationTo: 'user-progress';
+        value: string | UserProgress;
+      } | null)
+    | ({
+        relationTo: 'courses';
+        value: string | Course;
+      } | null)
+    | ({
         relationTo: 'redirects';
         value: string | Redirect;
       } | null)
@@ -1016,6 +1148,7 @@ export interface PagesSelect<T extends boolean = true> {
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
         archive?: T | ArchiveBlockSelect<T>;
+        course?: T | CourseBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
       };
   meta?:
@@ -1102,6 +1235,18 @@ export interface ArchiveBlockSelect<T extends boolean = true> {
   categories?: T;
   limit?: T;
   selectedDocs?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CourseBlock_select".
+ */
+export interface CourseBlockSelect<T extends boolean = true> {
+  introContent?: T;
+  populateBy?: T;
+  limit?: T;
+  selectedCourses?: T;
   id?: T;
   blockName?: T;
 }
@@ -1266,6 +1411,9 @@ export interface CategoriesSelect<T extends boolean = true> {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  role?: T;
+  subscriptionStatus?: T;
+  photo?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1275,6 +1423,67 @@ export interface UsersSelect<T extends boolean = true> {
   hash?: T;
   loginAttempts?: T;
   lockUntil?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "user-progress_select".
+ */
+export interface UserProgressSelect<T extends boolean = true> {
+  user?: T;
+  lesson?: T;
+  progress?: T;
+  completedSections?:
+    | T
+    | {
+        sectionTitle?: T;
+        completedAt?: T;
+        id?: T;
+      };
+  lastUpdated?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses_select".
+ */
+export interface CoursesSelect<T extends boolean = true> {
+  title?: T;
+  content?: T;
+  courseImage?: T;
+  courseVideo?: T;
+  level?: T;
+  instrument?: T;
+  publishedDate?: T;
+  relatedCourses?: T;
+  lessons?:
+    | T
+    | {
+        title?: T;
+        accessLevel?: T;
+        video?: T;
+        duration?: T;
+        content?: T;
+        resources?:
+          | T
+          | {
+              label?: T;
+              file?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        description?: T;
+      };
+  slug?: T;
+  slugLock?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

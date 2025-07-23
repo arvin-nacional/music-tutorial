@@ -21,6 +21,23 @@ export const Users: CollectionConfig = {
       name: 'name',
       type: 'text',
     },
+    {
+      name: 'role',
+      type: 'select',
+      options: ['free', 'subscriber', 'admin'],
+      defaultValue: 'free',
+    },
+    {
+      name: 'subscriptionStatus',
+      type: 'select',
+      options: ['none', 'active', 'expired'],
+      defaultValue: 'none',
+    },
+    {
+      name: 'photo',
+      type: 'upload',
+      relationTo: 'media',
+    },
   ],
   timestamps: true,
 }
